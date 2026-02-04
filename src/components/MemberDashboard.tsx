@@ -74,7 +74,7 @@ export function MemberDashboard({
     });
     const completedTasks = tasks.filter(t => t.isDone);
 
-    const currentPoints = activeTasks.reduce((sum, t) => sum + t.weight, 0);
+    const currentPoints = tasks.reduce((sum, t) => sum + t.weight, 0);
     const isOverLimit = currentPoints > memberMaxPoints;
 
     // Set default category when categories load

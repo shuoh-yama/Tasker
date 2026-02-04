@@ -136,7 +136,7 @@ export default function TeamPage() {
                                 const avatarUrl = member.avatarUrl;
                                 const memberName = member.name;
                                 const memberMaxPoints = member.maxPoints ?? 15;
-                                const currentPoints = memberTasks.filter((t: any) => !t.isDone).reduce((sum: number, t: any) => sum + t.weight, 0);
+                                const currentPoints = memberTasks.reduce((sum: number, t: any) => sum + t.weight, 0);
                                 const isOverLimit = currentPoints > memberMaxPoints;
 
                                 return (

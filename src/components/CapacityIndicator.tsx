@@ -33,7 +33,7 @@ export function CapacityIndicator({ members, tasks }: CapacityIndicatorProps) {
         const memberTasks = tasks.filter(t => (t.assignedTo || t.memberId) === member.id);
 
         const currentLoad = memberTasks
-            .filter(t => t.workWeek === currentWeekStr && !t.isDone) // Count active load? Or all load? Plan said "Load". Usually "Remaining Load" or "Total Planned". Let's stick to Total Planned for Capacity planning.
+            .filter(t => t.workWeek === currentWeekStr) // Count active load? Or all load? Plan said "Load". Usually "Remaining Load" or "Total Planned". Let's stick to Total Planned for Capacity planning.
             .reduce((sum, t) => sum + t.weight, 0);
 
         const nextLoad = memberTasks

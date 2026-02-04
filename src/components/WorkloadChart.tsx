@@ -14,7 +14,7 @@ export function WorkloadChart({ tasks }: WorkloadChartProps) {
 
     // 1. Group tasks by memberId
     const workloadByMember = tasks
-        .filter(t => !t.isDone)
+        // .filter(t => !t.isDone) // Count ALL tasks for capacity view
         .reduce((acc, task) => {
             acc[task.memberId] = (acc[task.memberId] || 0) + task.weight;
             return acc;
