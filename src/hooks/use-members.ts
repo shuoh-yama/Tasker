@@ -5,21 +5,21 @@ export function useMembers() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    useEffect(() => {
-        async function fetchMembers() {
-            try {
-                const res = await fetch('/api/members');
-                if (res.ok) {
-                    const data = await res.json();
-                    setMembers(data);
-                }
-            } catch (e) {
-                console.error("Failed to fetch members", e);
-            } finally {
-                setIsLoaded(true);
+    async function fetchMembers() {
+        try {
+            const res = await fetch('/api/members');
+            if (res.ok) {
+                const data = await res.json();
+                setMembers(data);
             }
+        } catch (e) {
+            console.error("Failed to fetch members", e);
+        } finally {
+            setIsLoaded(true);
         }
+    }
 
+    useEffect(() => {
         fetchMembers();
     }, []);
 
@@ -28,5 +28,5 @@ export function useMembers() {
         return member ? member.name : id;
     };
 
-    return { members, isLoaded, getMemberName };
+    return { members, isLoaded, getMemberName, refreshMembers: fetchMembers };
 }

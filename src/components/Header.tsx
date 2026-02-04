@@ -1,18 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useWeek } from "@/context/WeekContext";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
-
+import { SettingsModal } from "@/components/SettingsModal";
 export function Header() {
     const { data: session } = useSession();
     const pathname = usePathname();
     const { currentWeek, nextWeek, prevWeek } = useWeek();
+    const [showSettings, setShowSettings] = useState(false);
 
     // Format week range in Japanese: "1月27日 〜 2月2日"
     const formatDate = (date: Date) => {
@@ -95,6 +97,14 @@ export function Header() {
                                 {session.user?.name}
                             </span>
                             <Button
+                                onClick={() => setShowSettings(true)}
+                                variant="ghost"
+                                size="icon"
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                <Settings className="w-5 h-5" />
+                            </Button>
+                            <Button
                                 onClick={() => signOut()}
                                 variant="outline"
                                 size="sm"
@@ -110,6 +120,8 @@ export function Header() {
                     )}
                 </div>
             </div>
+
+            <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
         </header>
     );
 }

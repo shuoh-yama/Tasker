@@ -302,3 +302,42 @@ export async function deleteTask(id: string) {
         },
     });
 }
+
+export async function updateMember(email: string, updates: { name?: string; avatarUrl?: string; maxPoints?: number }) {
+    const rows = await getSheetData(MEMBERS_TAB);
+    const rowIndex = rows.findIndex((r) => r[0] === email);
+
+    if (rowIndex === -1) return; // Not found
+
+    const sheetRow = rowIndex + 1; // 1-based index
+
+    // Column B: Name (Index 1)
+    if (updates.name !== undefined) {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${MEMBERS_TAB}!B${sheetRow}`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[updates.name]] },
+        });
+    }
+
+    // Column C: AvatarUrl (Index 2)
+    if (updates.avatarUrl !== undefined) {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${MEMBERS_TAB}!C${sheetRow}`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[updates.avatarUrl]] },
+        });
+    }
+
+    // Column E: MaxPoints (Index 4)
+    if (updates.maxPoints !== undefined) {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `${MEMBERS_TAB}!E${sheetRow}`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[updates.maxPoints.toString()]] },
+        });
+    }
+}

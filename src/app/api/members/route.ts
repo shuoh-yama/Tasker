@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMembers, ensureMember } from "@/lib/google-sheets";
+import { getMembers, ensureMember, updateMember } from "@/lib/google-sheets";
 
 export async function GET() {
     try {
@@ -31,5 +31,29 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error("Failed to register member:", error);
         return NextResponse.json({ error: "Failed to register member" }, { status: 500 });
+    }
+}
+
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { email, name, avatarUrl, maxPoints } = body;
+
+        console.log("PUT /api/members", { email, name, avatarUrl, maxPoints });
+
+        if (!email) {
+            return NextResponse.json({ error: "Email is required" }, { status: 400 });
+        }
+
+        await updateMember(email, {
+            name,
+            avatarUrl,
+            maxPoints: maxPoints ? Number(maxPoints) : undefined
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Failed to update member:", error);
+        return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
     }
 }
