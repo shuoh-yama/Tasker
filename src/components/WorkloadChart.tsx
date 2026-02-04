@@ -1,50 +1,65 @@
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine, Cell } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Task } from "@/lib/types";
 import { useMembers } from "@/hooks/use-members";
+import { useCategories } from "@/hooks/use-categories";
 
 interface WorkloadChartProps {
     tasks: Task[];
 }
 
-export function WorkloadChart({ tasks }: WorkloadChartProps) {
-    const { getMemberName, members } = useMembers();
+// Colors for categories (Synced with CategoryPieChart)
+const COLORS = [
+    "#3b82f6", // blue
+    "#a855f7", // purple
+    "#22c55e", // green
+    "#f59e0b", // amber
+    "#ef4444", // red
+    "#06b6d4", // cyan
+];
 
-    // 1. Group tasks by memberId
-    const workloadByMember = tasks
-        // .filter(t => !t.isDone) // Count ALL tasks for capacity view
-        .reduce((acc, task) => {
-            acc[task.memberId] = (acc[task.memberId] || 0) + task.weight;
-            return acc;
-        }, {} as Record<string, number>);
+export function WorkloadChart({ tasks }: WorkloadChartProps) {
+    const { getMemberName } = useMembers();
+    const { categories } = useCategories();
+
+    // 1. Group tasks by memberId and category through reduction
+    // Structure: { [memberId]: { name: string, [categoryId]: number, total: number } }
+    const workloadByMember = tasks.reduce((acc, task) => {
+        const memberId = task.memberId;
+        if (!acc[memberId]) {
+            acc[memberId] = { name: getMemberName(memberId), total: 0 };
+        }
+
+        const points = task.weight;
+        const categoryId = task.category;
+
+        // Add points to specific category
+        acc[memberId][categoryId] = (acc[memberId][categoryId] || 0) + points;
+
+        // Add to total (for potential sorting or other uses, though stacked bar handles display)
+        acc[memberId].total += points;
+
+        return acc;
+    }, {} as Record<string, any>);
 
     // 2. Convert to array for Recharts
-    const data = Object.entries(workloadByMember).map(([memberId, points]) => {
-        // Simple consistent color generation based on memberId string
-        const hash = memberId.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
-        const hue = Math.abs(hash % 360);
-        const color = `hsl(${hue}, 70%, 50%)`;
+    const data = Object.values(workloadByMember);
 
-        return {
-            name: getMemberName(memberId), // Use member name from Members sheet
-            points,
-            color,
-        };
-    });
+    if (data.length === 0) return null;
 
     return (
         <Card className="border-border bg-card">
             <CardHeader className="pb-2">
                 <CardTitle className="text-foreground text-lg font-medium tracking-tight">
-                    Current Workload
+                    Current Workload (by Category)
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="h-[200px] w-full">
+                <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data}>
+                        <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                             <XAxis
                                 dataKey="name"
                                 stroke="hsl(var(--muted-foreground))"
@@ -63,16 +78,29 @@ export function WorkloadChart({ tasks }: WorkloadChartProps) {
                                 contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}
                                 itemStyle={{ color: "hsl(var(--foreground))" }}
                                 cursor={{ fill: "hsl(var(--muted)/0.2)" }}
+                                formatter={(value: any, name: any) => {
+                                    // Try to find category name
+                                    const cat = categories.find(c => c.id === name);
+                                    return [`${value}pt`, cat ? cat.name : name];
+                                }}
                             />
-                            <ReferenceLine y={15} stroke="#ef4444" strokeDasharray="3 3" />
-                            <Bar dataKey="points" radius={[4, 4, 0, 0]}>
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={entry.points > 15 ? "#ef4444" : entry.points > 10 ? "#f97316" : entry.color}
-                                    />
-                                ))}
-                            </Bar>
+                            <Legend
+                                formatter={(value) => {
+                                    const cat = categories.find(c => c.id === value);
+                                    return <span className="text-foreground text-xs">{cat ? cat.name : value}</span>;
+                                }}
+                            />
+
+                            {/* Dynamically create Bar for each category */}
+                            {categories.map((category, index) => (
+                                <Bar
+                                    key={category.id}
+                                    dataKey={category.id}
+                                    stackId="a"
+                                    fill={COLORS[index % COLORS.length]}
+                                    radius={[0, 0, 0, 0]}
+                                />
+                            ))}
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
